@@ -15,7 +15,7 @@ jaffle_shop:
       schema: 'JAFFLE_SHOP'
       threads: 1
       client_session_keep_alive: False
-      query_tag: 'dbt-demo_tag'
+      query_tag: 'dbt-demo_tag_github_actions'
 
       # optional
       connect_retries: 0 # default 0
