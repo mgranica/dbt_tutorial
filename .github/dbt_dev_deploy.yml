@@ -1,0 +1,55 @@
+name: dbt production run on push branches to main
+
+on:
+  push:
+    branches:
+      - main
+  # Allow manual trigger of the workflow
+  workflow_dispatch:
+
+env:
+  DBT_PROFILE_TARGET: dev
+  DBT_PROFILE_ACCOUNT: ${{ secrets.DBT_PROFILE_ACCOUNT }}
+  DBT_PROFILE_USER: ${{ secrets.DBT_PROFILE_USER }}
+  DBT_PROFILE_PASSWORD: ${{ secrets.DBT_PROFILE_PASSWORD }}
+
+jobs:
+  dbt_run:
+    name: dbt refresh and test on push branches to main
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+        working-directory: ./
+
+      - name: Prepare DBT profiles directory
+        run: |
+          mkdir -p ~/.dbt
+          cp profiles_github.yml ~/.dbt/profiles.yml
+        working-directory: ./
+
+      - name: Install dbt packages
+        run: dbt deps
+        # optionally use this parameter
+        # to set a main directory of dbt project:
+        working-directory: ./
+
+      - name: Run the models
+        run: dbt run --profiles-dir ./ --profile jaffle_shop --target dev
+        working-directory: ./
+
+      - name: Run tests
+        run: dbt test --profiles-dir ./ --profile jaffle_shop --target dev
+        working-directory: ./
